@@ -69,7 +69,7 @@ public:
 
         // Create the window
         window = XCreateSimpleWindow(
-                display,              // Display
+                display,              // Dis    play
                 DefaultRootWindow(display), // Parent window
                 0, 0,                  // Position
                 800, 600,              // Size
@@ -79,8 +79,10 @@ public:
         );
 
         // Set window properties
-        XSelectInput(display, window, ExposureMask | KeyPressMask);
+        XSelectInput(display, window, ExposureMask | KeyPressMask | ButtonPressMask);
         XMapWindow(display, window);
+        buttonClickCount = 0;
+
     }
 
     void Run() {
@@ -88,14 +90,16 @@ public:
         XEvent event;
         while (true) {
             XNextEvent(display, &event);
-            if (event.type == Expose) {
-                onExpose();
-            } else if (event.type == KeyPress) {
-                drawString(50, 100, "lskdjflskjdfflk!", 0x000000);
-            } else if (event.type == ButtonPress) {
-//                if(isButtonClicked(event.xbutton.x, event.xbutton.y)){
-                    drawString(50, 200, "aaaaaaaaaaaaaaaa!", 0x000000);
-//                }
+            switch (event.type) {
+                case Expose:
+                    onExpose();
+                    break;
+                case ButtonPress:
+                    if (isButtonClicked(event.xbutton.x, event.xbutton.y)) {
+                        buttonClickCount++;
+                        onExpose(); // Redraw to update the click count
+                    }
+                    break;
             }
         }
     }
@@ -140,10 +144,14 @@ private:
 #ifdef _WIN32
 
 #else
+    int buttonClickCount;
+
     void onExpose() {
         drawString(10, 20, "Hello, World!", 0x000000);
-        drawString(20, 30, " Bye!", 0x000000);
-        drawButton(10, 40, 100, 50, "Click me!", 0x000000);
+
+        char buttonLabel[50];
+        sprintf(buttonLabel, "Click me! (%d)", buttonClickCount);
+        drawButton(50, 100, 100, 50, buttonLabel, 0x000000);
     }
 
     void drawString(int x, int y, const char* string, int color) {
@@ -151,8 +159,8 @@ private:
 
         size_t strlen = std::string(string).length();
 
-        XSetFont(display, gc, XLoadFont(display, "fixed")); // font
-        XSetForeground(display, gc, color); // color
+        XSetFont(display, gc, XLoadFont(display, "fixed"));
+        XSetForeground(display, gc, color);
 
         XDrawString(display, window, gc, x, y, string, static_cast<int>(strlen));
 
@@ -162,19 +170,24 @@ private:
 
     void drawButton(int x, int y, int width, int height, const char* string, int color) {
         GC gc = XCreateGC(display, window, 0, nullptr);
-        // Set the color
         XSetForeground(display, gc, color);
-
-        // Draw the button as a rectangle
         XFillRectangle(display, window, gc, x, y, width, height);
 
-        drawString(x + 20 , y + 20, string, 0xFF0000);
+        XSetForeground(display, gc, 0xFFFFFF); // White color for text
+        drawString(x + 10, y + height / 2, string, 0xFFFFFF);
 
         XFreeGC(display, gc);
         XFlush(display);
     }
-#endif
+
+    bool isButtonClicked(int mouseX, int mouseY) {
+        // Button bounds
+        int x = 50, y = 100, width = 100, height = 50;
+
+        return (mouseX >= x && mouseX <= (x + width) && mouseY >= y && mouseY <= (y + height));
+    }
 };
+#endif
 
 int main() {
     MyGUI myGui;
