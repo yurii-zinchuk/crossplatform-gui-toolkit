@@ -7,6 +7,7 @@
 
 #include <cstdio>
 #include <cstdlib>
+#include <string>
 
 #ifdef _WIN32
 #include <windows.h>
@@ -88,28 +89,13 @@ public:
         while (true) {
             XNextEvent(display, &event);
             if (event.type == Expose) {
-                // Draw a simple "Hello, World!" message
-
-                // Get the drawing context
-                GC gc = XCreateGC(display, window, 0, nullptr);
-
-                // Set the font and color
-                XSetFont(display, gc, XLoadFont(display, "fixed"));
-                XSetForeground(display, gc, BlackPixel(display, DefaultScreen(display)));
-
-                // Draw the text
-                XDrawString(display, window, gc, 10, 20, "Hello, World!", 13);
-
-                // Free the drawing context
-                XFreeGC(display, gc);
-
-                // Flush the X server to ensure the drawing is visible
-                XFlush(display);
+                onExpose();
             } else if (event.type == KeyPress) {
-                // Handle key press event
-                // ...
+                drawString(50, 100, "lskdjflskjdfflk!", 0x000000);
+            } else if (event.type == ButtonPress) {
+                drawString(50, 100, "lskdjflskjdfflk!", 0x000000);
             }
-        }
+
     }
 #endif
 
@@ -147,6 +133,44 @@ private:
 #else
     Display* display;
     Window window;
+#endif
+
+#ifdef _WIN32
+
+#else
+    void onExpose() {
+        drawString(10, 20, "Hello, World!", 0x000000);
+        drawString(20, 30, " Bye!", 0x000000);
+        drawButton(10, 40, 100, 50, "Click me!", 0x000000);
+    }
+
+    void drawString(int x, int y, const char* string, int color) {
+        GC gc = XCreateGC(display, window, 0, nullptr);
+
+        size_t strlen = std::string(string).length();
+
+        XSetFont(display, gc, XLoadFont(display, "fixed")); // font
+        XSetForeground(display, gc, color); // color
+
+        XDrawString(display, window, gc, x, y, string, static_cast<int>(strlen));
+
+        XFreeGC(display, gc);
+        XFlush(display);
+    }
+
+    void drawButton(int x, int y, int width, int height, const char* string, int color) {
+        GC gc = XCreateGC(display, window, 0, nullptr);
+        // Set the color
+        XSetForeground(display, gc, color);
+
+        // Draw the button as a rectangle
+        XFillRectangle(display, window, gc, x, y, width, height);
+
+        drawString(x + 20 , y + 20, string, 0xFF0000);
+
+        XFreeGC(display, gc);
+        XFlush(display);
+    }
 #endif
 };
 
