@@ -93,9 +93,9 @@ public:
             } else if (event.type == KeyPress) {
                 drawString(50, 100, "lskdjflskjdfflk!", 0x000000);
             } else if (event.type == ButtonPress) {
-                drawString(50, 100, "lskdjflskjdfflk!", 0x000000);
+                drawString(50, 200, "aaaaaaaaaaaaaaaa!", 0x000000);
             }
-
+        }
     }
 #endif
 
