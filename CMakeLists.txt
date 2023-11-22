@@ -1,7 +1,10 @@
-cmake_minimum_required(VERSION 3.22)
+cmake_minimum_required(VERSION 3.10)
+
 project(gui_toolkit)
 
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 11)
 
-add_executable(gui_toolkit
-        main.cpp)
+add_executable(gui_toolkit main.cpp)
+
+find_package(X11 REQUIRED)
+target_link_libraries(gui_toolkit PRIVATE X11)
