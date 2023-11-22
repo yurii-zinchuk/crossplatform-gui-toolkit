@@ -2,18 +2,19 @@
 // Created by yuriizin on 22.11.23.
 //
 
-// Cross-platform GUI Toolkit Example (Windows and X Window System)
-// Compile with: g++ -o mygui mygui.cpp -lX11 (for X Window System)
-
 #include <cstdio>
 #include <cstdlib>
-#include <string>
 
 #ifdef _WIN32
+
 #include <windows.h>
+
 #else
+
 #include <X11/Xlib.h>
-#include <X11/Xutil.h>
+#include "elements/MyButton.cpp"
+#include "elements/MyText.cpp"
+
 #endif
 
 class MyGUI {
@@ -59,6 +60,7 @@ public:
         }
     }
 #else
+
     MyGUI() {
         // Open a connection to the X server
         display = XOpenDisplay(nullptr);
@@ -81,28 +83,34 @@ public:
         // Set window properties
         XSelectInput(display, window, ExposureMask | KeyPressMask | ButtonPressMask);
         XMapWindow(display, window);
-        buttonClickCount = 0;
-
     }
 
-    void Run() {
-        // Run the event loop
+    [[noreturn]] void Run() {
         XEvent event;
         while (true) {
             XNextEvent(display, &event);
             switch (event.type) {
                 case Expose:
                     onExpose();
-                    break;
                 case ButtonPress:
-                    if (isButtonClicked(event.xbutton.x, event.xbutton.y)) {
-                        buttonClickCount++;
-                        onExpose(); // Redraw to update the click count
+                    if (button.isClicked(event.xbutton.x, event.xbutton.y)) {
+                        button.onClick();
+                        onExpose();
                     }
-                    break;
             }
         }
     }
+
+    void addButton(const MyButton &btn) {
+        this->button = btn;
+        drawButton(btn);
+    }
+
+    void addText(const MyText &txt) {
+        this->text = txt;
+        drawText(txt);
+    }
+
 #endif
 
 private:
@@ -137,61 +145,49 @@ private:
         }
     }
 #else
-    Display* display;
+    Display *display;
     Window window;
 #endif
 
 #ifdef _WIN32
 
+    // nothing for a while
+
 #else
-    int buttonClickCount;
+
+    MyButton button;
+    MyText text;
 
     void onExpose() {
-        drawString(10, 20, "Hello, World!", 0x000000);
-
-        char buttonLabel[50];
-        sprintf(buttonLabel, "Click me! (%d)", buttonClickCount);
-        drawButton(50, 100, 100, 50, buttonLabel, 0x000000);
+        drawText(text);
+        drawButton(button);
     }
 
-    void drawString(int x, int y, const char* string, int color) {
+    void drawText(const MyText &txt) {
         GC gc = XCreateGC(display, window, 0, nullptr);
-
-        size_t strlen = std::string(string).length();
 
         XSetFont(display, gc, XLoadFont(display, "fixed"));
-        XSetForeground(display, gc, color);
+        XSetForeground(display, gc, txt.color);
 
-        XDrawString(display, window, gc, x, y, string, static_cast<int>(strlen));
+        XDrawString(display, window, gc, txt.x, txt.y, txt.text.c_str(), static_cast<int>(txt.text.length()));
 
         XFreeGC(display, gc);
         XFlush(display);
     }
 
-    void drawButton(int x, int y, int width, int height, const char* string, int color) {
+    void drawButton(const MyButton &btn) {
         GC gc = XCreateGC(display, window, 0, nullptr);
-        XSetForeground(display, gc, color);
-        XFillRectangle(display, window, gc, x, y, width, height);
+        XSetForeground(display, gc, btn.color);
+        XFillRectangle(display, window, gc, btn.x, btn.y, btn.width, btn.height);
 
         XSetForeground(display, gc, 0xFFFFFF); // White color for text
-        drawString(x + 10, y + height / 2, string, 0xFFFFFF);
+        drawText(
+                MyText(btn.text, 0xFFFFFF, btn.x + 10, btn.y + btn.height / 2)
+        );
 
         XFreeGC(display, gc);
         XFlush(display);
     }
-
-    bool isButtonClicked(int mouseX, int mouseY) {
-        // Button bounds
-        int x = 50, y = 100, width = 100, height = 50;
-
-        return (mouseX >= x && mouseX <= (x + width) && mouseY >= y && mouseY <= (y + height));
-    }
 };
+
 #endif
-
-int main() {
-    MyGUI myGui;
-    myGui.Run();
-    return 0;
-}
-
