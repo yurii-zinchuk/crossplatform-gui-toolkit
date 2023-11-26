@@ -4,26 +4,25 @@
 
 #include <cstdio>
 #include <cstdlib>
+#include "elements/MyButton.cpp"
+#include "elements/MyText.cpp"
+#include "elements/MyTextInput.cpp"
+#include <vector>
 
 #ifdef _WIN32
 
 #include <windows.h>
-
+LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 #else
-
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
-#include <vector>
-#include "elements/MyButton.cpp"
-#include "elements/MyText.cpp"
-#include "elements/MyTextInput.cpp"
-
 #endif
 
 class MyGUI {
 public:
 #ifdef _WIN32
-    MyGUI() {
+
+    MyGUI(int color, int width, int height) {
         // Initialize the Windows application instance
         hInstance = GetModuleHandle(nullptr);
 
@@ -31,14 +30,14 @@ public:
         WNDCLASS wc = {};
         wc.lpfnWndProc = WindowProc;
         wc.hInstance = hInstance;
-        wc.lpszClassName = L"MyGUIWindowClass";
+        wc.lpszClassName = "MyGUIWindowClass";
         RegisterClass(&wc);
 
         // Create the window
         hwnd = CreateWindowEx(
             0,                              // Optional window styles
-            L"MyGUIWindowClass",            // Window class name
-            L"My GUI",                      // Window title
+            "MyGUIWindowClass",            // Window class name
+            "My GUI",                      // Window title
             WS_OVERLAPPEDWINDOW,            // Window style
 
             // Size and position
@@ -53,7 +52,6 @@ public:
         // Show the window
         ShowWindow(hwnd, SW_SHOWNORMAL);
     }
-
     void Run() {
         // Run the message loop
         MSG msg = {};
@@ -62,6 +60,29 @@ public:
             DispatchMessage(&msg);
         }
     }
+    void addButton(const MyButton& button) {
+        buttons.push_back(button);
+        InvalidateRect(hwnd, nullptr, TRUE);
+    }
+
+    void addTextInput(const MyTextInput& textInput) {
+        textInputs.push_back(textInput);
+        InvalidateRect(hwnd, nullptr, TRUE);
+    }
+
+    void addText(const MyText& text) {
+        texts.push_back(text);
+        InvalidateRect(hwnd, nullptr, TRUE);
+    }
+    std::string return_text_input(int id) {
+        for (const auto& textInput : textInputs)
+            if (textInput.id == id) {
+                return textInput.text;
+            }
+        return "";
+    }
+
+   
 #else
 
     int color, width, height;
@@ -176,14 +197,17 @@ private:
 #ifdef _WIN32
     HWND hwnd;
     HINSTANCE hInstance;
-
+    std::vector<MyButton> buttons;
+    std::vector<MyTextInput> textInputs;
+    std::vector<MyText> texts;
     static LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
         MyGUI* myGui;
         if (uMsg == WM_NCCREATE) {
             CREATESTRUCT* createStruct = reinterpret_cast<CREATESTRUCT*>(lParam);
             myGui = reinterpret_cast<MyGUI*>(createStruct->lpCreateParams);
             SetWindowLongPtr(hwnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(myGui));
-        } else {
+        }
+        else {
             myGui = reinterpret_cast<MyGUI*>(GetWindowLongPtr(hwnd, GWLP_USERDATA));
         }
 
@@ -196,13 +220,54 @@ private:
 
     LRESULT HandleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
         switch (uMsg) {
-            case WM_DESTROY:
-                PostQuitMessage(0);
-                return 0;
-            default:
-                return DefWindowProc(hwnd, uMsg, wParam, lParam);
+        case WM_DESTROY:
+            PostQuitMessage(0);
+            return 0;
+
+        case WM_PAINT:
+            onPaint();
+            break;
+
+            // Other cases for handling button clicks, text input, etc.
+            // ...
+
+        default:
+            return DefWindowProc(hwnd, uMsg, wParam, lParam);
         }
+        return 0;
     }
+
+    void onPaint() {
+        PAINTSTRUCT ps;
+        HDC hdc = BeginPaint(hwnd, &ps);
+
+        // Draw buttons
+        for (const auto& button : buttons) {
+            RECT rect = { button.x, button.y, button.x + button.width, button.y + button.height };
+            DrawText(hdc, button.text.c_str(), -1, &rect, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+        }
+
+        // Draw text inputs
+        for (const auto& textInput : textInputs) {
+            RECT rect = { textInput.x, textInput.y, textInput.x + textInput.width, textInput.y + textInput.height };
+            DrawText(hdc, textInput.text.c_str(), -1, &rect, DT_LEFT | DT_VCENTER | DT_SINGLELINE);
+        }
+
+        // Draw texts
+        for (const auto& text : texts) {
+            SetTextColor(hdc, text.color);
+            TextOut(hdc, text.x, text.y, text.text.c_str(), text.text.length());
+        }
+
+        EndPaint(hwnd, &ps);
+    }
+
+    // Additional functions for handling button clicks, text input, etc.
+    // ...
+};
+
+// Application entry point
+
 #else
     Display *display;
     Window window;
