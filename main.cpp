@@ -64,7 +64,9 @@ public:
     }
 #else
 
-    MyGUI() {
+    int color, width, height;
+
+    explicit MyGUI(int color, int width, int height) : color(color), width(width), height(height) {
         // Open a connection to the X server
         display = XOpenDisplay(nullptr);
         if (!display) {
@@ -77,10 +79,11 @@ public:
                 display,              // Display
                 DefaultRootWindow(display), // Parent window
                 0, 0,                  // Position
-                800, 600,              // Size
+                width, height,              // Size
                 1,                     // Border width
                 BlackPixel(display, DefaultScreen(display)), // Border color
-                WhitePixel(display, DefaultScreen(display))  // Background color
+                // WhitePixel(display, DefaultScreen(display))  // Background color
+                this->color
         );
 
         // Set window properties
@@ -153,9 +156,18 @@ public:
         onExpose();
     }
 
+
     void addTextInput(const MyTextInput &textInput) {
         this->textInputs.push_back(textInput);
         onExpose();
+    }
+
+    std::string return_text_input(int id) {
+        for (const auto &textInput: textInputs)
+            if (textInput.id == id) {
+                return textInput.text;
+            }
+        return "";
     }
 
 #endif
@@ -209,11 +221,13 @@ private:
     void onExpose() {
         clearWindow();
 
+        for (const auto &button: buttons)
+            drawButton(button);
+
+
         for (const auto &text: texts)
             drawText(const_cast<MyText &>(text));
 
-        for (const auto &button: buttons)
-            drawButton(button);
 
         for (const auto &textInput: textInputs)
             drawTextInput(textInput);
@@ -221,9 +235,9 @@ private:
 
     void clearWindow() {
         GC gc = XCreateGC(display, window, 0, nullptr);
-        XSetForeground(display, gc, WhitePixel(display, DefaultScreen(display)));
+        XSetForeground(display, gc, color);
 
-        XFillRectangle(display, window, gc, 0, 0, 800, 600); // Adjust the size based on your window dimensions
+        XFillRectangle(display, window, gc, 0, 0, width, height); // Adjust the size based on your window dimensions
 
         XFreeGC(display, gc);
         XFlush(display);
