@@ -12,8 +12,11 @@
 #else
 
 #include <X11/Xlib.h>
+#include <X11/Xutil.h>
+#include <vector>
 #include "elements/MyButton.cpp"
 #include "elements/MyText.cpp"
+#include "elements/MyTextInput.cpp"
 
 #endif
 
@@ -71,7 +74,7 @@ public:
 
         // Create the window
         window = XCreateSimpleWindow(
-                display,              // Dis    play
+                display,              // Display
                 DefaultRootWindow(display), // Parent window
                 0, 0,                  // Position
                 800, 600,              // Size
@@ -93,22 +96,59 @@ public:
                 case Expose:
                     onExpose();
                 case ButtonPress:
-                    if (button.isClicked(event.xbutton.x, event.xbutton.y)) {
-                        button.onClick();
-                        onExpose();
-                    }
+                    for (auto &button: buttons)
+                        if (button.isClicked(event.xbutton.x, event.xbutton.y)) {
+                            button.onClick();
+                            onExpose();
+                            continue;
+                        }
+
+                    for (auto &textInput: textInputs)
+                        if (textInput.isClicked(event.xbutton.x, event.xbutton.y)) {
+                            handleTextInput(textInput);
+                            onExpose();
+                            continue;
+                        }
             }
         }
     }
 
+    void handleTextInput(MyTextInput &textInput) {
+        XEvent event;
+        char buf[32];
+        KeySym keySym;
+        while (true) {
+            XNextEvent(display, &event);
+            XLookupString(&event.xkey, buf, sizeof(buf), &keySym, nullptr);
+            if (event.type == ButtonPress && !textInput.isClicked(event.xbutton.x, event.xbutton.y)) {
+                break;
+            } else if (event.type == ButtonPress) {
+                continue;
+            }
+
+            if (keySym == XK_BackSpace) {
+                if (!textInput.text.empty())
+                    textInput.text.pop_back();
+            } else {
+                textInput.text += buf;
+            }
+            onExpose();
+        }
+    }
+
     void addButton(const MyButton &btn) {
-        this->button = btn;
+        this->buttons.push_back(btn);
         drawButton(btn);
     }
 
     void addText(const MyText &txt) {
-        this->text = txt;
+        this->texts.push_back(txt);
         drawText(txt);
+    }
+
+    void addTextInput(const MyTextInput &textInput) {
+        this->textInputs.push_back(textInput);
+        drawTextInput(textInput);
     }
 
 #endif
@@ -155,12 +195,19 @@ private:
 
 #else
 
-    MyButton button;
-    MyText text;
+    std::vector<MyButton> buttons;
+    std::vector<MyText> texts;
+    std::vector<MyTextInput> textInputs;
 
     void onExpose() {
-        drawText(text);
-        drawButton(button);
+        for (const auto &text: texts)
+            drawText(text);
+
+        for (const auto &button: buttons)
+            drawButton(button);
+
+        for (const auto &textInput: textInputs)
+            drawTextInput(textInput);
     }
 
     void drawText(const MyText &txt) {
@@ -183,6 +230,20 @@ private:
         XSetForeground(display, gc, 0xFFFFFF); // White color for text
         drawText(
                 MyText(btn.text, 0xFFFFFF, btn.x + 10, btn.y + btn.height / 2)
+        );
+
+        XFreeGC(display, gc);
+        XFlush(display);
+    }
+
+    void drawTextInput(const MyTextInput &textInput) {
+        GC gc = XCreateGC(display, window, 0, nullptr);
+        XSetForeground(display, gc, textInput.color);
+        XFillRectangle(display, window, gc, textInput.x, textInput.y, textInput.width, textInput.height);
+
+        XSetForeground(display, gc, 0xFFFFFF); // White color for text
+        drawText(
+                MyText(textInput.text, 0xFFFFFF, textInput.x + 10, textInput.y + textInput.height / 2)
         );
 
         XFreeGC(display, gc);
