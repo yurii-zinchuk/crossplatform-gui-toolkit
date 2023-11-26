@@ -18,17 +18,9 @@ int main() {
         );
     };
 
-
-
     button2.onClick = [&gui, &input]() {
-//        gui.addText(
-//                MyText("Button clicked 2!", 0x000000, 200, 50)
-//        );
-
-
-
         gui.addText(
-                MyText(input.text, 0x000000, 200, 50)
+                MyText(input.id, 0x000000, 200, 50)
         );
     };
 

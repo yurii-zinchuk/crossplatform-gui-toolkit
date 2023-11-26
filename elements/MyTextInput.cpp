@@ -5,10 +5,13 @@
 #include <string>
 
 class MyTextInput {
+    int idCounter = 0;
+
 public:
     std::string text;
     int color;
     int x, y, width, height;
+    int id = idCounter++;
 
     MyTextInput(int color, int x, int y, int width, int height) {
         this->color = color;

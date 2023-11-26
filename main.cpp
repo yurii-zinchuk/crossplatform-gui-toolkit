@@ -216,6 +216,16 @@ private:
         XSetFont(display, gc, XLoadFont(display, "fixed"));
         XSetForeground(display, gc, txt.color);
 
+        if (txt.inputId != -1) {
+            for (const auto &textInput: textInputs)
+                if (textInput.id == txt.inputId) {
+                    XDrawString(
+                            display, window, gc, txt.x, txt.y, textInput.text.c_str(),
+                            static_cast<int>(textInput.text.length()));
+                    return;
+                }
+        }
+
         XDrawString(display, window, gc, txt.x, txt.y, txt.text.c_str(), static_cast<int>(txt.text.length()));
 
         XFreeGC(display, gc);
