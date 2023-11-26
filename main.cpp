@@ -138,17 +138,24 @@ public:
 
     void addButton(const MyButton &btn) {
         this->buttons.push_back(btn);
-        drawButton(btn);
+        onExpose();
     }
 
     void addText(const MyText &txt) {
+        for (auto &text: this->texts)
+            if (text.x == txt.x && text.y == txt.y) {
+                text = txt;
+                onExpose();
+                return;
+            }
+
         this->texts.push_back(txt);
-        drawText(txt);
+        onExpose();
     }
 
     void addTextInput(const MyTextInput &textInput) {
         this->textInputs.push_back(textInput);
-        drawTextInput(textInput);
+        onExpose();
     }
 
 #endif
@@ -200,8 +207,10 @@ private:
     std::vector<MyTextInput> textInputs;
 
     void onExpose() {
+        clearWindow();
+
         for (const auto &text: texts)
-            drawText(text);
+            drawText(const_cast<MyText &>(text));
 
         for (const auto &button: buttons)
             drawButton(button);
@@ -210,19 +219,27 @@ private:
             drawTextInput(textInput);
     }
 
-    void drawText(const MyText &txt) {
+    void clearWindow() {
+        GC gc = XCreateGC(display, window, 0, nullptr);
+        XSetForeground(display, gc, WhitePixel(display, DefaultScreen(display)));
+
+        XFillRectangle(display, window, gc, 0, 0, 800, 600); // Adjust the size based on your window dimensions
+
+        XFreeGC(display, gc);
+        XFlush(display);
+    }
+
+    void drawText(MyText &txt) {
         GC gc = XCreateGC(display, window, 0, nullptr);
 
         XSetFont(display, gc, XLoadFont(display, "fixed"));
         XSetForeground(display, gc, txt.color);
 
         if (txt.inputId != -1) {
-            for (const auto &textInput: textInputs)
+            for (auto &textInput: textInputs)
                 if (textInput.id == txt.inputId) {
-                    XDrawString(
-                            display, window, gc, txt.x, txt.y, textInput.text.c_str(),
-                            static_cast<int>(textInput.text.length()));
-                    return;
+                    txt.text = textInput.text;
+                    txt.inputId = -1;
                 }
         }
 
@@ -238,9 +255,9 @@ private:
         XFillRectangle(display, window, gc, btn.x, btn.y, btn.width, btn.height);
 
         XSetForeground(display, gc, 0xFFFFFF); // White color for text
-        drawText(
-                MyText(btn.text, 0xFFFFFF, btn.x + 10, btn.y + btn.height / 2)
-        );
+
+        MyText myText = MyText(btn.text, 0xFFFFFF, btn.x + 10, btn.y + btn.height / 2);
+        drawText(myText);
 
         XFreeGC(display, gc);
         XFlush(display);
@@ -252,9 +269,9 @@ private:
         XFillRectangle(display, window, gc, textInput.x, textInput.y, textInput.width, textInput.height);
 
         XSetForeground(display, gc, 0xFFFFFF); // White color for text
-        drawText(
-                MyText(textInput.text, 0xFFFFFF, textInput.x + 10, textInput.y + textInput.height / 2)
-        );
+
+        MyText myText = MyText(textInput.text, 0xFFFFFF, textInput.x + 10, textInput.y + textInput.height / 2);
+        drawText(myText);
 
         XFreeGC(display, gc);
         XFlush(display);
