@@ -28,7 +28,7 @@ int main() {
 
 
         gui.addText(
-                MyText(input.text_ref, 0x000000, 200, 50)
+                MyText(input.text, 0x000000, 200, 50)
         );
     };
 

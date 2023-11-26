@@ -3,20 +3,12 @@
 //
 
 #include <string>
-#include <functional>
-#include <utility>
 
 class MyTextInput {
 public:
     std::string text;
     int color;
     int x, y, width, height;
-
-    std::function<void()> onClick = []() {
-
-    };
-
-    std::string text_ref = &text;
 
     MyTextInput(int color, int x, int y, int width, int height) {
         this->color = color;
