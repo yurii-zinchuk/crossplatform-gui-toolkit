@@ -25,6 +25,7 @@ public:
     MyGUI(int color, int width, int height) {
         // Initialize the Windows application instance
         hInstance = GetModuleHandle(nullptr);
+        activeTextInput = nullptr; // Initialize to nullptr
 
         // Register the window class
         WNDCLASS wc = {};
@@ -200,6 +201,7 @@ private:
     std::vector<MyButton> buttons;
     std::vector<MyTextInput> textInputs;
     std::vector<MyText> texts;
+    MyTextInput* activeTextInput; // Pointer to the active text input field
     static LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
         MyGUI* myGui;
         if (uMsg == WM_NCCREATE) {
@@ -228,8 +230,41 @@ private:
             onPaint();
             break;
 
-            // Other cases for handling button clicks, text input, etc.
-            // ...
+        case WM_LBUTTONDOWN: {
+            int x = LOWORD(lParam);
+            int y = HIWORD(lParam);
+            for (auto& textInput : textInputs) {
+                if (textInput.isClicked(x, y)) {
+                    // Set this textInput as active
+                    activeTextInput = &textInput;
+                    InvalidateRect(hwnd, nullptr, TRUE);
+                    break;  // Break after finding the clicked text input
+                }
+            }
+            break;
+        }
+
+        case WM_CHAR: {
+            if (activeTextInput) {
+                char c = static_cast<char>(wParam);
+                activeTextInput->text += c;
+                InvalidateRect(hwnd, nullptr, TRUE);
+            }
+            break;
+        }
+
+        case WM_KEYDOWN: {
+            if (activeTextInput && wParam == VK_BACK) {
+                if (!activeTextInput->text.empty()) {
+                    activeTextInput->text.pop_back();
+                    InvalidateRect(hwnd, nullptr, TRUE);
+                }
+            }
+            break;
+        }
+
+                    // Other cases for additional message handling
+                    // ...
 
         default:
             return DefWindowProc(hwnd, uMsg, wParam, lParam);
