@@ -72,6 +72,13 @@ public:
     }
 
     void addText(const MyText& text) {
+        for (auto& txt : texts) {
+            if (txt.x == text.x && txt.y == text.y) {
+                txt = text;
+                InvalidateRect(hwnd, nullptr, TRUE);
+                return;
+            }
+        }
         texts.push_back(text);
         InvalidateRect(hwnd, nullptr, TRUE);
     }
@@ -83,7 +90,7 @@ public:
         return "";
     }
 
-   
+
 #else
 
     int color, width, height;
@@ -98,14 +105,14 @@ public:
 
         // Create the window
         window = XCreateSimpleWindow(
-                display,              // Display
-                DefaultRootWindow(display), // Parent window
-                0, 0,                  // Position
-                width, height,              // Size
-                1,                     // Border width
-                BlackPixel(display, DefaultScreen(display)), // Border color
-                // WhitePixel(display, DefaultScreen(display))  // Background color
-                this->color
+            display,              // Display
+            DefaultRootWindow(display), // Parent window
+            0, 0,                  // Position
+            width, height,              // Size
+            1,                     // Border width
+            BlackPixel(display, DefaultScreen(display)), // Border color
+            // WhitePixel(display, DefaultScreen(display))  // Background color
+            this->color
         );
 
         // Set window properties
@@ -118,27 +125,27 @@ public:
         while (true) {
             XNextEvent(display, &event);
             switch (event.type) {
-                case Expose:
-                    onExpose();
-                case ButtonPress:
-                    for (auto &button: buttons)
-                        if (button.isClicked(event.xbutton.x, event.xbutton.y)) {
-                            button.onClick();
-                            onExpose();
-                            continue;
-                        }
+            case Expose:
+                onExpose();
+            case ButtonPress:
+                for (auto& button : buttons)
+                    if (button.isClicked(event.xbutton.x, event.xbutton.y)) {
+                        button.onClick();
+                        onExpose();
+                        continue;
+                    }
 
-                    for (auto &textInput: textInputs)
-                        if (textInput.isClicked(event.xbutton.x, event.xbutton.y)) {
-                            handleTextInput(textInput);
-                            onExpose();
-                            continue;
-                        }
+                for (auto& textInput : textInputs)
+                    if (textInput.isClicked(event.xbutton.x, event.xbutton.y)) {
+                        handleTextInput(textInput);
+                        onExpose();
+                        continue;
+                    }
             }
         }
     }
 
-    void handleTextInput(MyTextInput &textInput) {
+    void handleTextInput(MyTextInput& textInput) {
         XEvent event;
         char buf[32];
         KeySym keySym;
@@ -147,27 +154,29 @@ public:
             XLookupString(&event.xkey, buf, sizeof(buf), &keySym, nullptr);
             if (event.type == ButtonPress && !textInput.isClicked(event.xbutton.x, event.xbutton.y)) {
                 break;
-            } else if (event.type == ButtonPress) {
+            }
+            else if (event.type == ButtonPress) {
                 continue;
             }
 
             if (keySym == XK_BackSpace) {
                 if (!textInput.text.empty())
                     textInput.text.pop_back();
-            } else {
+            }
+            else {
                 textInput.text += buf;
             }
             onExpose();
         }
     }
 
-    void addButton(const MyButton &btn) {
+    void addButton(const MyButton& btn) {
         this->buttons.push_back(btn);
         onExpose();
     }
 
-    void addText(const MyText &txt) {
-        for (auto &text: this->texts)
+    void addText(const MyText& txt) {
+        for (auto& text : this->texts)
             if (text.x == txt.x && text.y == txt.y) {
                 text = txt;
                 onExpose();
@@ -179,13 +188,13 @@ public:
     }
 
 
-    void addTextInput(const MyTextInput &textInput) {
+    void addTextInput(const MyTextInput& textInput) {
         this->textInputs.push_back(textInput);
         onExpose();
     }
 
     std::string return_text_input(int id) {
-        for (const auto &textInput: textInputs)
+        for (const auto& textInput : textInputs)
             if (textInput.id == id) {
                 return textInput.text;
             }
@@ -221,6 +230,7 @@ private:
     }
 
     LRESULT HandleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
+
         switch (uMsg) {
         case WM_DESTROY:
             PostQuitMessage(0);
@@ -233,6 +243,12 @@ private:
         case WM_LBUTTONDOWN: {
             int x = LOWORD(lParam);
             int y = HIWORD(lParam);
+            for (auto& button : buttons) {
+                if (button.isClicked(x, y)) {
+                    button.onClick();
+                    InvalidateRect(hwnd, nullptr, TRUE);
+                }
+            }
             for (auto& textInput : textInputs) {
                 if (textInput.isClicked(x, y)) {
                     // Set this textInput as active
@@ -246,25 +262,34 @@ private:
 
         case WM_CHAR: {
             if (activeTextInput) {
-                char c = static_cast<char>(wParam);
-                activeTextInput->text += c;
-                InvalidateRect(hwnd, nullptr, TRUE);
-            }
-            break;
-        }
-
-        case WM_KEYDOWN: {
-            if (activeTextInput && wParam == VK_BACK) {
-                if (!activeTextInput->text.empty()) {
-                    activeTextInput->text.pop_back();
-                    InvalidateRect(hwnd, nullptr, TRUE);
+                if (activeTextInput && wParam == VK_BACK) {
+                    if (!activeTextInput->text.empty()) {
+                        activeTextInput->text.pop_back();
+                    }
                 }
+                else {
+                    char c = static_cast<char>(wParam);
+                    activeTextInput->text += c;
+                }
+                InvalidateRect(hwnd, nullptr, TRUE);
+
+
             }
             break;
         }
 
-                    // Other cases for additional message handling
-                    // ...
+                    //        case WM_KEYDOWN: {
+                      //          if (activeTextInput && wParam == VK_BACK) {
+                        //            if (!activeTextInput->text.empty()) {
+                          //              activeTextInput->text.pop_back();
+                            //            InvalidateRect(hwnd, nullptr, TRUE);
+                              //      }
+                           //     }
+                             //   break;
+                            //}
+
+                                        // Other cases for additional message handling
+                                        // ...
 
         default:
             return DefWindowProc(hwnd, uMsg, wParam, lParam);
@@ -276,29 +301,52 @@ private:
         PAINTSTRUCT ps;
         HDC hdc = BeginPaint(hwnd, &ps);
 
-        // Draw buttons
+        // Create an off-screen buffer for double buffering
+        HDC hdcBuffer = CreateCompatibleDC(hdc);
+        HBITMAP hbmBuffer = CreateCompatibleBitmap(hdc, 800, 600);
+        HGDIOBJ oldBuffer = SelectObject(hdcBuffer, hbmBuffer);
+
+        // Create a solid brush for the background color of buttons and text inputs
+        HBRUSH backgroundBrush = CreateSolidBrush(RGB(240, 240, 240));
+
+        // Clear the entire buffer with the window's background color (white in this case)
+        RECT entireRect;
+        GetClientRect(hwnd, &entireRect);
+        HBRUSH windowBackgroundBrush = CreateSolidBrush(RGB(255, 255, 255)); // White background
+        FillRect(hdcBuffer, &entireRect, windowBackgroundBrush);
+
+        // Draw buttons with background color
         for (const auto& button : buttons) {
             RECT rect = { button.x, button.y, button.x + button.width, button.y + button.height };
-            DrawText(hdc, button.text.c_str(), -1, &rect, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+            FillRect(hdcBuffer, &rect, backgroundBrush);
+            DrawText(hdcBuffer, button.text.c_str(), -1, &rect, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
         }
 
-        // Draw text inputs
+        // Draw text inputs with background color
         for (const auto& textInput : textInputs) {
             RECT rect = { textInput.x, textInput.y, textInput.x + textInput.width, textInput.y + textInput.height };
-            DrawText(hdc, textInput.text.c_str(), -1, &rect, DT_LEFT | DT_VCENTER | DT_SINGLELINE);
+            FillRect(hdcBuffer, &rect, backgroundBrush);
+            DrawText(hdcBuffer, textInput.text.c_str(), -1, &rect, DT_LEFT | DT_VCENTER | DT_SINGLELINE);
         }
 
         // Draw texts
         for (const auto& text : texts) {
-            SetTextColor(hdc, text.color);
-            TextOut(hdc, text.x, text.y, text.text.c_str(), text.text.length());
+            SetTextColor(hdcBuffer, text.color);
+            TextOut(hdcBuffer, text.x, text.y, text.text.c_str(), text.text.length());
         }
+
+        // Copy the buffer to the screen
+        BitBlt(hdc, 0, 0, 800, 600, hdcBuffer, 0, 0, SRCCOPY);
+
+        // Clean up
+        SelectObject(hdcBuffer, oldBuffer); // Restore old buffer
+        DeleteObject(hbmBuffer);
+        DeleteObject(backgroundBrush);
+        DeleteObject(windowBackgroundBrush);
+        DeleteDC(hdcBuffer);
 
         EndPaint(hwnd, &ps);
     }
-
-    // Additional functions for handling button clicks, text input, etc.
-    // ...
 };
 
 // Application entry point
