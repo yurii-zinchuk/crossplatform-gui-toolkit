@@ -5,13 +5,14 @@
 #include <string>
 
 class MyTextInput {
-    int idCounter = 0;
+    // int idCounter = 0;
 
 public:
+    static inline int idCounter = 0;
     std::string text;
     int color;
     int x, y, width, height;
-    int id = idCounter++;
+    int id;
 
     MyTextInput(int color, int x, int y, int width, int height) {
         this->color = color;
@@ -19,6 +20,7 @@ public:
         this->y = y;
         this->width = width;
         this->height = height;
+        id = idCounter++; 
     }
 
     bool isClicked(int mouseX, int mouseY) const {

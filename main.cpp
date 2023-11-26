@@ -64,7 +64,7 @@ public:
     }
 #else
 
-    MyGUI() {
+    MyGUI(int color) {
         // Open a connection to the X server
         display = XOpenDisplay(nullptr);
         if (!display) {
@@ -80,7 +80,8 @@ public:
                 800, 600,              // Size
                 1,                     // Border width
                 BlackPixel(display, DefaultScreen(display)), // Border color
-                WhitePixel(display, DefaultScreen(display))  // Background color
+                // WhitePixel(display, DefaultScreen(display))  // Background color
+                color
         );
 
         // Set window properties
@@ -146,9 +147,18 @@ public:
         drawText(txt);
     }
 
+
     void addTextInput(const MyTextInput &textInput) {
         this->textInputs.push_back(textInput);
         drawTextInput(textInput);
+    }
+
+    std::string return_text_input(int id) {
+        for (const auto &textInput: textInputs)
+            if (textInput.id == id) {
+                return textInput.text;
+            }
+        return "";
     }
 
 #endif
@@ -200,11 +210,12 @@ private:
     std::vector<MyTextInput> textInputs;
 
     void onExpose() {
+        for (const auto &button: buttons)
+            drawButton(button);
+
         for (const auto &text: texts)
             drawText(text);
 
-        for (const auto &button: buttons)
-            drawButton(button);
 
         for (const auto &textInput: textInputs)
             drawTextInput(textInput);
