@@ -24,8 +24,11 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 class MyGUI {
 public:
 #ifdef _WIN32
-
-    MyGUI(int color, int width, int height) {
+    int width;
+    int height;
+    MyGUI(int color, int n_color, int width, int height) {
+        this->width = width;
+        this->height = height;
         // Initialize the Windows application instance
         hInstance = GetModuleHandle(nullptr);
         activeTextInput = nullptr; // Initialize to nullptr
@@ -36,6 +39,8 @@ public:
         wc.hInstance = hInstance;
         wc.lpszClassName = "MyGUIWindowClass";
         RegisterClass(&wc);
+
+        
 
         // Create the window
         hwnd = CreateWindowEx(
@@ -327,12 +332,12 @@ private:
 
 
         // Draw buttons
-        for (const auto& button : buttons) {
-            bool rel_width = btn.relative_size == 1 || btn.relative_size == 3;
-            bool rel_height = btn.relative_size == 2 || btn.relative_size == 3;
+        for (auto& button : buttons) {
+            bool rel_width = button.relative_size == 1 || button.relative_size == 3;
+            bool rel_height = button.relative_size == 2 || button.relative_size == 3;
 
-            btn.width = rel_width ? width * btn.initial_width / 100 : btn.width;
-            btn.height = rel_height ? btn.initial_height * height / 100 : btn.height;
+            button.width = rel_width ? width * button.initial_width / 100 : button.width;
+            button.height = rel_height ? button.initial_height * height / 100 : button.height;
 
             RECT rect = { button.x, button.y, button.x + button.width, button.y + button.height };
             DrawText(hdc, button.text.c_str(), -1, &rect, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
@@ -340,7 +345,7 @@ private:
         }
 
         // Draw text inputs
-        for (const auto& textInput : textInputs) {
+        for (auto& textInput : textInputs) {
             bool rel_width = textInput.relative_size == 1 || textInput.relative_size == 3;
             bool rel_height = textInput.relative_size == 2 || textInput.relative_size == 3;
 
