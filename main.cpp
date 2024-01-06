@@ -249,6 +249,8 @@ private:
         case WM_SIZE:
             width = LOWORD(lParam);
             height = HIWORD(lParam);
+            onPaint();
+            break;
 
         case WM_PAINT:
             onPaint();
