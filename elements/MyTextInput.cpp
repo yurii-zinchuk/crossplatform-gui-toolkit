@@ -14,6 +14,7 @@ public:
     int text_color;
     int text_n_color;
     int x, y, width, height;
+    int initial_width, initial_height;
     int relative_size;
     int id;
 
@@ -27,6 +28,8 @@ public:
         this->width = width;
         this->height = height;
         this->relative_size = relative_size;
+        this->initial_width = width;
+        this->initial_height = height;
         id = idCounter++;
     }
 

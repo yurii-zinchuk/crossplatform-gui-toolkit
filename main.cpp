@@ -241,6 +241,10 @@ private:
             PostQuitMessage(0);
             return 0;
 
+        case WM_SIZE:
+            width = LOWORD(lParam);
+            height = HIWORD(lParam);
+
         case WM_PAINT:
             onPaint();
             break;
@@ -308,7 +312,7 @@ private:
 
         // Optional: Create an off-screen buffer for double buffering
         HDC hdcBuffer = CreateCompatibleDC(hdc);
-        HBITMAP hbmBuffer = CreateCompatibleBitmap(hdc, 800, 600);
+        HBITMAP hbmBuffer = CreateCompatibleBitmap(hdc, width, height);
         SelectObject(hdcBuffer, hbmBuffer);
         RECT entireRect;
         GetClientRect(hwnd, &entireRect);
@@ -344,8 +348,8 @@ private:
             bool rel_width = textInput.relative_size == 1 || textInput.relative_size == 3;
             bool rel_height = textInput.relative_size == 2 || textInput.relative_size == 3;
 
-            textInput.width = rel_width ? textInput.width * width / 100 : textInput.width;
-            textInput.height = rel_height ? textInput.height * height / 100 : textInput.height;
+            textInput.width = rel_width ? textInput.initial_width * width / 100 : textInput.width;
+            textInput.height = rel_height ? textInput.initial_height * height / 100 : textInput.height;
 
             RECT rect = { textInput.x, textInput.y, textInput.x + textInput.width, textInput.y + textInput.height };
             FillRect(hdcBuffer, &rect, backgroundBrush);
@@ -482,8 +486,8 @@ private:
         bool rel_width = textInput.relative_size == 1 || textInput.relative_size == 3;
         bool rel_height = textInput.relative_size == 2 || textInput.relative_size == 3;
 
-        textInput.width = rel_width ? textInput.width * width / 100 : textInput.width;
-        textInput.height = rel_height ? textInput.height * height / 100 : textInput.height;
+        textInput.width = rel_width ? textInput.initial_width * width / 100 : textInput.width;
+        textInput.height = rel_height ? textInput.initial_height * height / 100 : textInput.height;
 
         GC gc = XCreateGC(display, window, 0, nullptr);
         XSetForeground(display, gc, isDark ? textInput.n_color : textInput.color);
