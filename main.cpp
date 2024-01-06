@@ -240,17 +240,18 @@ private:
     }
 
     LRESULT HandleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
-
         switch (uMsg) {
         case WM_DESTROY:
             PostQuitMessage(0);
             return 0;
 
         case WM_SIZE:
-            width = LOWORD(lParam);
-            height = HIWORD(lParam);
-            onPaint();
-            break;
+            width = LOWORD(lParam);  // New width
+            height = HIWORD(lParam); // New height
+
+            // Invalidate the window rect to ensure it's redrawn
+            InvalidateRect(hwnd, NULL, TRUE);
+            return 0;
 
         case WM_PAINT:
             onPaint();
@@ -334,7 +335,7 @@ private:
             DrawText(hdcBuffer, textInput.text.c_str(), -1, &rect, DT_LEFT | DT_VCENTER | DT_SINGLELINE);
         }
 
-        BitBlt(hdc, 0, 0, 800, 600, hdcBuffer, 0, 0, SRCCOPY);
+        BitBlt(hdc, 0, 0, width, height, hdcBuffer, 0, 0, SRCCOPY);
 
 
         // Draw buttons
