@@ -42,7 +42,7 @@ public:
             WS_OVERLAPPEDWINDOW,            // Window style
 
             // Size and position
-            CW_USEDEFAULT, CW_USEDEFAULT, 800, 600,
+            CW_USEDEFAULT, CW_USEDEFAULT, width, height,
 
             nullptr,        // Parent window
             nullptr,        // Menu

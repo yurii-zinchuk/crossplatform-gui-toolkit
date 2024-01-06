@@ -6,7 +6,7 @@
 #include <iostream>
 
 int main() {
-    MyGUI gui(0xFFFFFF, 800, 600);
+    MyGUI gui(0xFFFFFF, 1500, 1300);
 
     MyText hello_text("Hello! Thank you for choosing to fill out our questionnaire from the company POC/ACS/OS!",
                       0x453f3d, 100, 50);
@@ -29,19 +29,19 @@ int main() {
                 MyText("Your name is ", 0x333232, 100, 300)
         );
         gui.addText(
-                MyText(name_input.id, 0x000000, 220, 300)
+                MyText(name_input.id, 0x333232, 220, 300)
         );
         gui.addText(
                 MyText("Your surname is ", 0x333232, 100, 350)
         );
         gui.addText(
-                MyText(surname_input.id, 0x000000, 220, 350)
+                MyText(surname_input.id, 0x333232, 220, 350)
         );
         gui.addText(
                 MyText("You were born on ", 0x333232, 100, 400)
         );
         gui.addText(
-                MyText(birth_date_input.id, 0x000000, 220, 400)
+                MyText(birth_date_input.id, 0x333232, 220, 400)
         );
         gui.addText(
                 MyText("Your age is ", 0x333232, 100, 450)
