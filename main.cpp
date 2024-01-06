@@ -16,6 +16,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 #else
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
+#include <stdexcept>
+
 #endif
 
 class MyGUI {
@@ -93,9 +95,9 @@ public:
    
 #else
 
-    int color, width, height;
+    int color, n_color, width, height;
 
-    explicit MyGUI(int color, int width, int height) : color(color), width(width), height(height) {
+    explicit MyGUI(int color, int n_color, int width, int height) : color(color), n_color(n_color), width(width), height(height) {
         // Open a connection to the X server
         display = XOpenDisplay(nullptr);
         if (!display) {
@@ -374,9 +376,29 @@ private:
     std::vector<MyButton> buttons;
     std::vector<MyText> texts;
     std::vector<MyTextInput> textInputs;
+    bool isDark = false;
+
+    bool isDarkTheme() {
+        char buffer[128];
+        std::string result;
+        FILE* pipe = popen("gsettings get org.gnome.desktop.interface gtk-theme", "r");
+        if (!pipe) throw std::runtime_error("popen() failed!");
+        try {
+            while (fgets(buffer, sizeof buffer, pipe) != nullptr) {
+                result += buffer;
+            }
+        } catch (...) {
+            pclose(pipe);
+            throw;
+        }
+        pclose(pipe);
+
+        return result.find("dark") != std::string::npos;
+    }
 
     void onExpose() {
         clearWindow();
+        isDark = isDarkTheme();
 
         for (const auto &button: buttons)
             drawButton(button);
@@ -392,7 +414,7 @@ private:
 
     void clearWindow() {
         GC gc = XCreateGC(display, window, 0, nullptr);
-        XSetForeground(display, gc, color);
+        XSetForeground(display, gc, isDark ? n_color : color);
 
         XFillRectangle(display, window, gc, 0, 0, width, height); // Adjust the size based on your window dimensions
 
@@ -404,7 +426,7 @@ private:
         GC gc = XCreateGC(display, window, 0, nullptr);
 
         XSetFont(display, gc, XLoadFont(display, "fixed"));
-        XSetForeground(display, gc, txt.color);
+        XSetForeground(display, gc, isDark ? txt.n_color : txt.color);
 
         if (txt.inputId != -1) {
             for (auto &textInput: textInputs)
@@ -422,12 +444,12 @@ private:
 
     void drawButton(const MyButton &btn) {
         GC gc = XCreateGC(display, window, 0, nullptr);
-        XSetForeground(display, gc, btn.color);
+        XSetForeground(display, gc, isDark ? btn.n_color : btn.color);
         XFillRectangle(display, window, gc, btn.x, btn.y, btn.width, btn.height);
 
-        XSetForeground(display, gc, 0xFFFFFF); // White color for text
+        XSetForeground(display, gc, isDark ? btn.text_n_color : btn.text_color); // White color for text
 
-        MyText myText = MyText(btn.text, 0xFFFFFF, btn.x + 10, btn.y + btn.height / 2);
+        MyText myText = MyText(btn.text, btn.text_color, btn.text_n_color, btn.x + 10, btn.y + btn.height / 2);
         drawText(myText);
 
         XFreeGC(display, gc);
@@ -436,12 +458,12 @@ private:
 
     void drawTextInput(const MyTextInput &textInput) {
         GC gc = XCreateGC(display, window, 0, nullptr);
-        XSetForeground(display, gc, textInput.color);
+        XSetForeground(display, gc, isDark ? textInput.n_color : textInput.color);
         XFillRectangle(display, window, gc, textInput.x, textInput.y, textInput.width, textInput.height);
 
-        XSetForeground(display, gc, 0xFFFFFF); // White color for text
+        XSetForeground(display, gc, isDark ? textInput.text_n_color : textInput.text_color); // White color for text
 
-        MyText myText = MyText(textInput.text, 0xFFFFFF, textInput.x + 10, textInput.y + textInput.height / 2);
+        MyText myText = MyText(textInput.text, textInput.text_color, textInput.text_n_color, textInput.x + 10, textInput.y + textInput.height / 2);
         drawText(myText);
 
         XFreeGC(display, gc);
