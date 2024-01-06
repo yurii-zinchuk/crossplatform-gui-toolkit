@@ -63,12 +63,22 @@ public:
         }
     }
 
-    void addButton(const MyButton& button) {
+    void addButton(MyButton& button) {
+        bool rel_width = button.relative_size == 1 || button.relative_size == 3;
+        bool rel_height = button.relative_size == 2 || button.relative_size == 3;
+
+        button.width = rel_width ? width * button.initial_width / 100 : button.width;
+        button.height = rel_height ? button.initial_height * height / 100 : button.height;
         buttons.push_back(button);
         InvalidateRect(hwnd, nullptr, TRUE);
     }
 
-    void addTextInput(const MyTextInput& textInput) {
+    void addTextInput(MyTextInput& textInput) {
+        bool rel_width = textInput.relative_size == 1 || textInput.relative_size == 3;
+        bool rel_height = textInput.relative_size == 2 || textInput.relative_size == 3;
+
+        textInput.width = rel_width ? textInput.initial_width * width / 100 : textInput.width;
+        textInput.height = rel_height ? textInput.initial_height * height / 100 : textInput.height;
         textInputs.push_back(textInput);
         InvalidateRect(hwnd, nullptr, TRUE);
     }
@@ -287,6 +297,7 @@ private:
         default:
             return DefWindowProc(hwnd, uMsg, wParam, lParam);
         }
+
         return 0;
     }
 
@@ -301,14 +312,26 @@ private:
         GetClientRect(hwnd, &entireRect);
         HBRUSH backgroundBrush = CreateSolidBrush(RGB(255, 255, 255));
         FillRect(hdcBuffer, &entireRect, backgroundBrush);
-        backgroundBrush = CreateSolidBrush(RGB(240, 240, 240));
 
         for (const auto& textInput : textInputs) {
             RECT rect = { textInput.x, textInput.y, textInput.x + textInput.width, textInput.y + textInput.height };
+            backgroundBrush = CreateSolidBrush(textInput.color);
             FillRect(hdcBuffer, &rect, backgroundBrush);
+            SetTextColor(hdcBuffer, textInput.text_color);
+            SetBkColor(hdcBuffer, 0xFF72F7);
+            SetBkMode(hdcBuffer, TRANSPARENT);
             DrawText(hdcBuffer, textInput.text.c_str(), -1, &rect, DT_LEFT | DT_VCENTER | DT_SINGLELINE);
         }
 
+        for (const auto& button : buttons) {
+            RECT rect = { button.x, button.y, button.x + button.width, button.y + button.height };
+            backgroundBrush = CreateSolidBrush(button.color);
+            FillRect(hdcBuffer, &rect, backgroundBrush);
+            SetTextColor(hdcBuffer, button.text_color); 
+            SetBkMode(hdcBuffer, TRANSPARENT);
+            DrawText(hdcBuffer, button.text.c_str(), -1, &rect, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+
+        }
         BitBlt(hdc, 0, 0, width, height, hdcBuffer, 0, 0, SRCCOPY);
 
 
@@ -321,8 +344,13 @@ private:
             button.height = rel_height ? button.initial_height * height / 100 : button.height;
 
             RECT rect = { button.x, button.y, button.x + button.width, button.y + button.height };
-            DrawText(hdc, button.text.c_str(), -1, &rect, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+            backgroundBrush = CreateSolidBrush(button.color);
             FillRect(hdcBuffer, &rect, backgroundBrush);
+            SetTextColor(hdcBuffer, button.text_color); 
+            SetBkMode(hdcBuffer, TRANSPARENT);
+
+            DrawText(hdcBuffer, button.text.c_str(), -1, &rect, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+
         }
 
         // Draw text inputs
@@ -334,8 +362,12 @@ private:
             textInput.height = rel_height ? textInput.initial_height * height / 100 : textInput.height;
 
             RECT rect = { textInput.x, textInput.y, textInput.x + textInput.width, textInput.y + textInput.height };
+            backgroundBrush = CreateSolidBrush(textInput.color);
             FillRect(hdcBuffer, &rect, backgroundBrush);
-            DrawText(hdc, textInput.text.c_str(), -1, &rect, DT_LEFT | DT_VCENTER | DT_SINGLELINE);
+            SetTextColor(hdcBuffer, textInput.text_color);
+            SetBkColor(hdcBuffer, textInput.color);
+            SetBkMode(hdcBuffer, TRANSPARENT);
+            DrawText(hdcBuffer, textInput.text.c_str(), -1, &rect, DT_LEFT | DT_VCENTER | DT_SINGLELINE);
         }
 
         // Draw texts
@@ -350,6 +382,7 @@ private:
             }
 
             SetTextColor(hdc, text.color);
+            SetBkMode(hdc, TRANSPARENT);
             TextOut(hdc, text.x, text.y, text.text.c_str(), text.text.length());
         }
 
