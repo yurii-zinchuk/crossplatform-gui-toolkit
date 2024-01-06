@@ -27,9 +27,13 @@ public:
 #ifdef _WIN32
     int width;
     int height;
+    int color;
+    int n_color;
     MyGUI(int color, int n_color, int width, int height) {
         this->width = width;
         this->height = height;
+        this->color = color;
+        this->n_color = n_color;
 
         hInstance = GetModuleHandle(nullptr);
         activeTextInput = nullptr;
@@ -220,6 +224,7 @@ private:
     std::vector<MyTextInput> textInputs;
     std::vector<MyText> texts;
     MyTextInput* activeTextInput;
+    bool IsDark = false;
 
     static LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
         MyGUI* myGui;
@@ -301,7 +306,35 @@ private:
         return 0;
     }
 
+
+    bool IsWindowsDarkThemeActive() {
+        DWORD themeData;
+        DWORD dataSize = sizeof(themeData);
+        LONG result;
+        HKEY hKey;
+
+        // Open the registry key where the theme data is stored
+        result = RegOpenKeyExW(HKEY_CURRENT_USER, L"Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize", 0, KEY_READ, &hKey);
+        if (result != ERROR_SUCCESS) {
+            return false; // Assuming light theme if we fail to read the registry
+        }
+
+        // Query the value for the AppsUseLightTheme setting
+        result = RegQueryValueExW(hKey, L"AppsUseLightTheme", 0, NULL, reinterpret_cast<LPBYTE>(&themeData), &dataSize);
+        if (result != ERROR_SUCCESS) {
+            RegCloseKey(hKey);
+            return false; // Assuming light theme if we fail to read the registry
+        }
+
+        // Close the registry key
+        RegCloseKey(hKey);
+
+        // If the value is 0, dark theme is active, otherwise it's light
+        return themeData == 0;
+    }
+
     void onPaint() {
+        IsDark = IsWindowsDarkThemeActive();
         PAINTSTRUCT ps;
         HDC hdc = BeginPaint(hwnd, &ps);
 
@@ -310,14 +343,14 @@ private:
         SelectObject(hdcBuffer, hbmBuffer);
         RECT entireRect;
         GetClientRect(hwnd, &entireRect);
-        HBRUSH backgroundBrush = CreateSolidBrush(RGB(255, 255, 255));
+        HBRUSH backgroundBrush = CreateSolidBrush(IsDark ? n_color : color);
         FillRect(hdcBuffer, &entireRect, backgroundBrush);
 
         for (const auto& textInput : textInputs) {
             RECT rect = { textInput.x, textInput.y, textInput.x + textInput.width, textInput.y + textInput.height };
-            backgroundBrush = CreateSolidBrush(textInput.color);
+            backgroundBrush = CreateSolidBrush(IsDark ? textInput.n_color : textInput.color);
             FillRect(hdcBuffer, &rect, backgroundBrush);
-            SetTextColor(hdcBuffer, textInput.text_color);
+            SetTextColor(hdcBuffer, IsDark ? textInput.text_n_color : textInput.text_color);
             SetBkColor(hdcBuffer, 0xFF72F7);
             SetBkMode(hdcBuffer, TRANSPARENT);
             DrawText(hdcBuffer, textInput.text.c_str(), -1, &rect, DT_LEFT | DT_VCENTER | DT_SINGLELINE);
@@ -325,9 +358,9 @@ private:
 
         for (const auto& button : buttons) {
             RECT rect = { button.x, button.y, button.x + button.width, button.y + button.height };
-            backgroundBrush = CreateSolidBrush(button.color);
+            backgroundBrush = CreateSolidBrush(IsDark ? button.n_color : button.color);
             FillRect(hdcBuffer, &rect, backgroundBrush);
-            SetTextColor(hdcBuffer, button.text_color); 
+            SetTextColor(hdcBuffer, IsDark ? button.text_n_color : button.text_color);
             SetBkMode(hdcBuffer, TRANSPARENT);
             DrawText(hdcBuffer, button.text.c_str(), -1, &rect, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
 
@@ -344,9 +377,9 @@ private:
             button.height = rel_height ? button.initial_height * height / 100 : button.height;
 
             RECT rect = { button.x, button.y, button.x + button.width, button.y + button.height };
-            backgroundBrush = CreateSolidBrush(button.color);
+            backgroundBrush = CreateSolidBrush(IsDark ? button.n_color : button.color);
             FillRect(hdcBuffer, &rect, backgroundBrush);
-            SetTextColor(hdcBuffer, button.text_color); 
+            SetTextColor(hdcBuffer, IsDark ? button.text_n_color : button.text_color);
             SetBkMode(hdcBuffer, TRANSPARENT);
 
             DrawText(hdcBuffer, button.text.c_str(), -1, &rect, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
@@ -362,10 +395,10 @@ private:
             textInput.height = rel_height ? textInput.initial_height * height / 100 : textInput.height;
 
             RECT rect = { textInput.x, textInput.y, textInput.x + textInput.width, textInput.y + textInput.height };
-            backgroundBrush = CreateSolidBrush(textInput.color);
+            backgroundBrush = CreateSolidBrush(IsDark ? textInput.n_color : textInput.color);
             FillRect(hdcBuffer, &rect, backgroundBrush);
-            SetTextColor(hdcBuffer, textInput.text_color);
-            SetBkColor(hdcBuffer, textInput.color);
+            SetTextColor(hdcBuffer, IsDark ? textInput.text_n_color : textInput.text_color);
+            SetBkColor(hdcBuffer, IsDark ? textInput.n_color : textInput.color);
             SetBkMode(hdcBuffer, TRANSPARENT);
             DrawText(hdcBuffer, textInput.text.c_str(), -1, &rect, DT_LEFT | DT_VCENTER | DT_SINGLELINE);
         }
@@ -381,7 +414,7 @@ private:
                 }
             }
 
-            SetTextColor(hdc, text.color);
+            SetTextColor(hdc, IsDark ? text.n_color : text.color);
             SetBkMode(hdc, TRANSPARENT);
             TextOut(hdc, text.x, text.y, text.text.c_str(), text.text.length());
         }
@@ -399,7 +432,7 @@ private:
 
 #ifdef _WIN32
 
-    // nothing for a while
+   // nothing
 
 #else
 
