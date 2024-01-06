@@ -14,9 +14,10 @@ public:
     int text_color;
     int text_n_color;
     int x, y, width, height;
+    int relative_size;
     int id;
 
-    MyTextInput(int color, int n_color, int text_color, int text_n_color, int x, int y, int width, int height) {
+    MyTextInput(int color, int n_color, int text_color, int text_n_color, int x, int y, int width, int height, int relative_size = 0) {
         this->color = color;
         this->n_color = n_color;
         this->text_color = text_color;
@@ -25,6 +26,7 @@ public:
         this->y = y;
         this->width = width;
         this->height = height;
+        this->relative_size = relative_size;
         id = idCounter++;
     }
 
