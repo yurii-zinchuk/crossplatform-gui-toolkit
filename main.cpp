@@ -14,6 +14,7 @@
 #include <windows.h>
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 #else
+
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <stdexcept>
@@ -29,46 +30,39 @@ public:
     MyGUI(int color, int n_color, int width, int height) {
         this->width = width;
         this->height = height;
-        // Initialize the Windows application instance
-        hInstance = GetModuleHandle(nullptr);
-        activeTextInput = nullptr; // Initialize to nullptr
 
-        // Register the window class
+        hInstance = GetModuleHandle(nullptr);
+        activeTextInput = nullptr;
+
         WNDCLASS wc = {};
         wc.lpfnWndProc = WindowProc;
         wc.hInstance = hInstance;
         wc.lpszClassName = "MyGUIWindowClass";
         RegisterClass(&wc);
 
-        
-
-        // Create the window
         hwnd = CreateWindowEx(
-            0,                              // Optional window styles
-            "MyGUIWindowClass",            // Window class name
-            "My GUI",                      // Window title
-            WS_OVERLAPPEDWINDOW,            // Window style
-
-            // Size and position
+            0,
+            "MyGUIWindowClass",
+            "My GUI",
+            WS_OVERLAPPEDWINDOW,
             CW_USEDEFAULT, CW_USEDEFAULT, width, height,
-
-            nullptr,        // Parent window
-            nullptr,        // Menu
-            hInstance,      // Instance handle
-            this            // Additional application data
+            nullptr,
+            nullptr,
+            hInstance,
+            this
         );
 
-        // Show the window
         ShowWindow(hwnd, SW_SHOWNORMAL);
     }
+
     void Run() {
-        // Run the message loop
         MSG msg = {};
         while (GetMessage(&msg, nullptr, 0, 0)) {
             TranslateMessage(&msg);
             DispatchMessage(&msg);
         }
     }
+
     void addButton(const MyButton& button) {
         buttons.push_back(button);
         InvalidateRect(hwnd, nullptr, TRUE);
@@ -90,6 +84,7 @@ public:
         texts.push_back(text);
         InvalidateRect(hwnd, nullptr, TRUE);
     }
+
     std::string return_text_input(int id) {
         for (const auto& textInput : textInputs)
             if (textInput.id == id) {
@@ -97,33 +92,27 @@ public:
             }
         return "";
     }
-
-   
 #else
-
     int color, n_color, width, height;
 
-    explicit MyGUI(int color, int n_color, int width, int height) : color(color), n_color(n_color), width(width), height(height) {
-        // Open a connection to the X server
+    explicit MyGUI(int color, int n_color, int width, int height) : color(color), n_color(n_color), width(width),
+                                                                    height(height) {
         display = XOpenDisplay(nullptr);
         if (!display) {
             fprintf(stderr, "Unable to open display\n");
             exit(EXIT_FAILURE);
         }
 
-        // Create the window
         window = XCreateSimpleWindow(
-                display,              // Display
-                DefaultRootWindow(display), // Parent window
-                0, 0,                  // Position
-                width, height,              // Size
-                1,                     // Border width
-                BlackPixel(display, DefaultScreen(display)), // Border color
-                // WhitePixel(display, DefaultScreen(display))  // Background color
+                display,
+                DefaultRootWindow(display),
+                0, 0,
+                width, height,
+                1,
+                BlackPixel(display, DefaultScreen(display)),
                 this->color
         );
 
-        // Set window properties
         XSelectInput(display, window, ExposureMask | KeyPressMask | ButtonPressMask | StructureNotifyMask);
         XMapWindow(display, window);
     }
@@ -220,9 +209,11 @@ private:
     std::vector<MyButton> buttons;
     std::vector<MyTextInput> textInputs;
     std::vector<MyText> texts;
-    MyTextInput* activeTextInput; // Pointer to the active text input field
+    MyTextInput* activeTextInput;
+
     static LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
         MyGUI* myGui;
+
         if (uMsg == WM_NCCREATE) {
             CREATESTRUCT* createStruct = reinterpret_cast<CREATESTRUCT*>(lParam);
             myGui = reinterpret_cast<MyGUI*>(createStruct->lpCreateParams);
@@ -246,10 +237,9 @@ private:
             return 0;
 
         case WM_SIZE:
-            width = LOWORD(lParam);  // New width
-            height = HIWORD(lParam); // New height
+            width = LOWORD(lParam);
+            height = HIWORD(lParam);
 
-            // Invalidate the window rect to ensure it's redrawn
             InvalidateRect(hwnd, NULL, TRUE);
             return 0;
 
@@ -268,10 +258,9 @@ private:
             }
             for (auto& textInput : textInputs) {
                 if (textInput.isClicked(x, y)) {
-                    // Set this textInput as active
                     activeTextInput = &textInput;
                     InvalidateRect(hwnd, nullptr, TRUE);
-                    break;  // Break after finding the clicked text input
+                    break;
                 }
             }
             break;
@@ -295,19 +284,6 @@ private:
             break;
         }
 
-//        case WM_KEYDOWN: {
-  //          if (activeTextInput && wParam == VK_BACK) {
-    //            if (!activeTextInput->text.empty()) {
-      //              activeTextInput->text.pop_back();
-        //            InvalidateRect(hwnd, nullptr, TRUE);
-          //      }
-       //     }
-         //   break;
-        //}
-
-                    // Other cases for additional message handling
-                    // ...
-
         default:
             return DefWindowProc(hwnd, uMsg, wParam, lParam);
         }
@@ -318,17 +294,15 @@ private:
         PAINTSTRUCT ps;
         HDC hdc = BeginPaint(hwnd, &ps);
 
-        // Optional: Create an off-screen buffer for double buffering
         HDC hdcBuffer = CreateCompatibleDC(hdc);
         HBITMAP hbmBuffer = CreateCompatibleBitmap(hdc, width, height);
         SelectObject(hdcBuffer, hbmBuffer);
         RECT entireRect;
         GetClientRect(hwnd, &entireRect);
-        HBRUSH backgroundBrush = CreateSolidBrush(RGB(255, 255, 255)); // White background
+        HBRUSH backgroundBrush = CreateSolidBrush(RGB(255, 255, 255));
         FillRect(hdcBuffer, &entireRect, backgroundBrush);
-        // Clear the area where text is displayed
-// (Fill with the background color or draw a background rectangle)
         backgroundBrush = CreateSolidBrush(RGB(240, 240, 240));
+
         for (const auto& textInput : textInputs) {
             RECT rect = { textInput.x, textInput.y, textInput.x + textInput.width, textInput.y + textInput.height };
             FillRect(hdcBuffer, &rect, backgroundBrush);
@@ -384,13 +358,7 @@ private:
 
         EndPaint(hwnd, &ps);
     }
-
-    // Additional functions for handling button clicks, text input, etc.
-    // ...
 };
-
-// Application entry point
-
 #else
     Display *display;
     Window window;
@@ -410,7 +378,7 @@ private:
     bool isDarkTheme() {
         char buffer[128];
         std::string result;
-        FILE* pipe = popen("gsettings get org.gnome.desktop.interface gtk-theme", "r");
+        FILE *pipe = popen("gsettings get org.gnome.desktop.interface gtk-theme", "r");
         if (!pipe) throw std::runtime_error("popen() failed!");
         try {
             while (fgets(buffer, sizeof buffer, pipe) != nullptr) {
@@ -444,7 +412,7 @@ private:
         GC gc = XCreateGC(display, window, 0, nullptr);
         XSetForeground(display, gc, isDark ? n_color : color);
 
-        XFillRectangle(display, window, gc, 0, 0, width, height); // Adjust the size based on your window dimensions
+        XFillRectangle(display, window, gc, 0, 0, width, height);
 
         XFreeGC(display, gc);
         XFlush(display);
@@ -501,9 +469,10 @@ private:
         XSetForeground(display, gc, isDark ? textInput.n_color : textInput.color);
         XFillRectangle(display, window, gc, textInput.x, textInput.y, textInput.width, textInput.height);
 
-        XSetForeground(display, gc, isDark ? textInput.text_n_color : textInput.text_color); // White color for text
+        XSetForeground(display, gc, isDark ? textInput.text_n_color : textInput.text_color);
 
-        MyText myText = MyText(textInput.text, textInput.text_color, textInput.text_n_color, textInput.x + 10, textInput.y + textInput.height / 2);
+        MyText myText = MyText(textInput.text, textInput.text_color, textInput.text_n_color, textInput.x + 10,
+                               textInput.y + textInput.height / 2);
         drawText(myText);
 
         XFreeGC(display, gc);

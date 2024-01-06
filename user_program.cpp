@@ -29,7 +29,6 @@ int main() {
                 MyText("Your name is ", 0x333232, 0x000000, 100, 300)
         );
         gui.addText(
-
                 MyText(name_input.id, 0x000000, 0xffffff, 220, 300)
         );
         gui.addText(
@@ -48,7 +47,7 @@ int main() {
                 MyText("Your age is ", 0x333232, 0xffffff, 100, 450)
         );
 
-        int age = 2023 - std::stoi(gui.return_text_input(birth_date_input.id));
+        int age = 2024 - std::stoi(gui.return_text_input(birth_date_input.id));
         gui.addText(
                 MyText(std::to_string(age), 0x333232, 0xffffff, 220, 450)
         );
