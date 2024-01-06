@@ -4,9 +4,8 @@
 int main() {
     MyGUI gui(0xffffff, 0x101011, 1280, 720);
 
-    // Centralizing text and input fields
     int centerX = 1280/2;
-    int centerY = 720/2;
+    int centerY = 720 / 2;
 
     MyText hello_text("Hello! Thank you for choosing to fill out our questionnaire from the company POC/ACS/OS!",
                       0x453f3d, 0xD3D3D3, centerX - 300, centerY - 250);
@@ -22,35 +21,35 @@ int main() {
 
     MyButton submit_button("Submit", 0x453f3d, 0xD6D6D6, 0xffffff, 0x514B23, centerX - 100, centerY - 20, 15, 4, 3);
 
-    submit_button.onClick = [&gui, &name_input, &surname_input, &birth_date_input]() {
+    submit_button.onClick = [&gui, &name_input, &surname_input, &birth_date_input, centerX, centerY]() {
         gui.addText(
-                MyText("Your name is ", 0x333232, 0xD3D3D3, 1080/2 - 150, 720/2 + 50)
+                MyText("Your name is ", 0x333232, 0xD3D3D3, centerX - 150, centerY + 50)
         );
         gui.addText(
-                MyText(name_input.id, 0x000000, 0xD3D3D3, 1080/2 - 20, 720/2 + 50)
+                MyText(name_input.id, 0x000000, 0xD3D3D3, centerX - 20, centerY + 50)
         );
         gui.addText(
-                MyText("Your surname is ", 0x333232, 0xD3D3D3, 1080/2 - 150, 720/2 + 100)
+                MyText("Your surname is ", 0x333232, 0xD3D3D3, centerX - 150, centerY + 100)
         );
         gui.addText(
-                MyText(surname_input.id, 0x000000, 0xD3D3D3, 1080/2 - 20, 720/2 + 100)
+                MyText(surname_input.id, 0x000000, 0xD3D3D3, centerX - 20, centerY + 100)
         );
         gui.addText(
-                MyText("You were born on ", 0x333232, 0xD3D3D3, 1080/2 - 150, 720/2 + 150)
+                MyText("You were born on ", 0x333232, 0xD3D3D3, centerX - 150, centerY + 150)
         );
         gui.addText(
-                MyText(birth_date_input.id, 0x000000, 0xD3D3D3, 1080/2 - 20, 720/2 + 150)
+                MyText(birth_date_input.id, 0x000000, 0xD3D3D3, centerX - 20, centerY + 150)
         );
         gui.addText(
-                MyText("Your age is ", 0x333232, 0xD3D3D3, 1080/2 - 150, 720/2 + 200)
+                MyText("Your age is ", 0x333232, 0xD3D3D3, centerX - 150, centerY + 200)
         );
 
         int age = 2024 - std::stoi(gui.return_text_input(birth_date_input.id));
         gui.addText(
-                MyText(std::to_string(age), 0x333232, 0xD3D3D3, 1080/2 - 20, 720/2 + 200)
+                MyText(std::to_string(age), 0x333232, 0xD3D3D3, centerX - 20, centerY + 200)
         );
         gui.addText(
-                MyText("Thank you for filling out our questionnaire!", 0x333232, 0xD3D3D3, 1080/2 - 100, 720/2 + 250)
+                MyText("Thank you for filling out our questionnaire!", 0x333232, 0xD3D3D3, centerX - 100, centerY + 250)
         );
 
     };

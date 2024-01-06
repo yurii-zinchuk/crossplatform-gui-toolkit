@@ -313,23 +313,19 @@ private:
         LONG result;
         HKEY hKey;
 
-        // Open the registry key where the theme data is stored
         result = RegOpenKeyExW(HKEY_CURRENT_USER, L"Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize", 0, KEY_READ, &hKey);
         if (result != ERROR_SUCCESS) {
-            return false; // Assuming light theme if we fail to read the registry
+            return false; 
         }
 
-        // Query the value for the AppsUseLightTheme setting
         result = RegQueryValueExW(hKey, L"AppsUseLightTheme", 0, NULL, reinterpret_cast<LPBYTE>(&themeData), &dataSize);
         if (result != ERROR_SUCCESS) {
             RegCloseKey(hKey);
-            return false; // Assuming light theme if we fail to read the registry
+            return false;
         }
 
-        // Close the registry key
         RegCloseKey(hKey);
 
-        // If the value is 0, dark theme is active, otherwise it's light
         return themeData == 0;
     }
 
