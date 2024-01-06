@@ -21,7 +21,7 @@ int main() {
     MyText age_text("Enter Your Birth year:", 0x333232, 0x00000, 100, 200);
     MyTextInput birth_date_input(0xB7B7B7, 0x000000, 0x000000, 0xffffff, 250, 180, 200, 30);
 
-    MyButton submit_button("Submit", 0x453f3d, 0x000000, 0x000000, 0xffffff, 250, 230, 200, 30, 0);
+    MyButton submit_button("Submit", 0x453f3d, 0x000000, 0x000000, 0xffffff, 250, 230, 20, 30, 1);
 
 
     submit_button.onClick = [&gui, &name_input, &surname_input, &birth_date_input]() {
@@ -29,6 +29,7 @@ int main() {
                 MyText("Your name is ", 0x333232, 0x000000, 100, 300)
         );
         gui.addText(
+
                 MyText(name_input.id, 0x000000, 0xffffff, 220, 300)
         );
         gui.addText(
