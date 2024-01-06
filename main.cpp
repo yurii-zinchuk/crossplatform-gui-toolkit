@@ -328,6 +328,12 @@ private:
 
         // Draw buttons
         for (const auto& button : buttons) {
+            bool rel_width = btn.relative_size == 1 || btn.relative_size == 3;
+            bool rel_height = btn.relative_size == 2 || btn.relative_size == 3;
+
+            btn.width = rel_width ? width * btn.initial_width / 100 : btn.width;
+            btn.height = rel_height ? btn.initial_height * height / 100 : btn.height;
+
             RECT rect = { button.x, button.y, button.x + button.width, button.y + button.height };
             DrawText(hdc, button.text.c_str(), -1, &rect, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
             FillRect(hdcBuffer, &rect, backgroundBrush);
@@ -335,6 +341,12 @@ private:
 
         // Draw text inputs
         for (const auto& textInput : textInputs) {
+            bool rel_width = textInput.relative_size == 1 || textInput.relative_size == 3;
+            bool rel_height = textInput.relative_size == 2 || textInput.relative_size == 3;
+
+            textInput.width = rel_width ? textInput.width * width / 100 : textInput.width;
+            textInput.height = rel_height ? textInput.height * height / 100 : textInput.height;
+
             RECT rect = { textInput.x, textInput.y, textInput.x + textInput.width, textInput.y + textInput.height };
             FillRect(hdcBuffer, &rect, backgroundBrush);
             DrawText(hdc, textInput.text.c_str(), -1, &rect, DT_LEFT | DT_VCENTER | DT_SINGLELINE);
@@ -452,7 +464,6 @@ private:
 
         btn.width = rel_width ? width * btn.initial_width / 100 : btn.width;
         btn.height = rel_height ? btn.initial_height * height / 100 : btn.height;
-        std::cout << btn.width << " " << btn.height << std::endl;
 
         GC gc = XCreateGC(display, window, 0, nullptr);
         XSetForeground(display, gc, isDark ? btn.n_color : btn.color);
